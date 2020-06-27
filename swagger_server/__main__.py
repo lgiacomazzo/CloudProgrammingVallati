@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import connexion
+import openstack
 
 from swagger_server import encoder
 

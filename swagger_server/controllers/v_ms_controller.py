@@ -1,5 +1,6 @@
 import connexion
 import six
+import MySQLdb
 
 from swagger_server.models.configuration import Configuration  # noqa: E501
 from swagger_server import util
