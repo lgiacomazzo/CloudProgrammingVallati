@@ -5,7 +5,7 @@ import MySQLdb
 from swagger_server.models.configuration import Configuration  # noqa: E501
 from swagger_server import util
 from datetime import time
-from flask import jsonify, json
+from flask import jsonify
 
 def add_new_configuration(body):  # noqa: E501
     """Add a new configuration
@@ -30,6 +30,7 @@ def add_new_configuration(body):  # noqa: E501
         values = (body.time_start, body.time_end, body.flavor, body.image, body.number_of_v_ms)
         mycursor.execute(sql, values)
         mydb.commit()
+        mydb.close()
         return "The job is done"
     return "Not correct json format", 400
 
@@ -50,6 +51,7 @@ def delete_configuration_by_id(configurationID):  # noqa: E501
     values = (configurationID, )
     mycursor.execute(sql, values)
     mydb.commit()
+    mydb.close()
     return "The job is done"
 
 
@@ -69,6 +71,7 @@ def get_configuration_by_id(configurationID):  # noqa: E501
     values = (configurationID, )
     mycursor.execute(sql, values)
     myresult = mycursor.fetchall()
+    mydb.close()
     if (len(myresult) == 0):
         return jsonify({})
     return jsonify(id=int(myresult[0][0]), 
@@ -93,6 +96,7 @@ def get_configurations():  # noqa: E501
     sql = "SELECT * FROM configurations;"
     mycursor.execute(sql)
     myresult = mycursor.fetchall()
+    mydb.close()
     if (len(myresult) == 0):
         return jsonify({})
     configurations = []
@@ -103,7 +107,7 @@ def get_configurations():  # noqa: E501
             'timeEnd' : str(conf[2]), 
             'flavor' : conf[3], 
             'image' : conf[4], 
-            'numberOfVM' : int(conf[5])
+            'numberOfVMs' : int(conf[5])
         }
         configurations.append(jsob)
     return jsonify(configurations)
@@ -129,5 +133,6 @@ def update_configuration_by_id(configurationID, body):  # noqa: E501
         values = (body.time_start, body.time_end, body.flavor, body.image, body.number_of_v_ms, configurationID)
         mycursor.execute(sql, values)
         mydb.commit()
+        mydb.close()
         return "The job is done"
     return 'do some magic!'
