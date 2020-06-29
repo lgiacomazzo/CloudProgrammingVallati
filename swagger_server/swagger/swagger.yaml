@@ -61,6 +61,19 @@ paths:
         "404":
           description: "Not enough resources"
       x-swagger-router-controller: "swagger_server.controllers.v_ms_controller"
+    delete:
+      tags:
+      - "VMs"
+      summary: "Deletes all configurations"
+      description: ""
+      operationId: "delete_configurations"
+      produces:
+      - "application/xml"
+      - "application/json"
+      responses:
+        "200":
+          description: "Success"
+      x-swagger-router-controller: "swagger_server.controllers.v_ms_controller"
   /configurations/{configurationID}:
     get:
       tags:

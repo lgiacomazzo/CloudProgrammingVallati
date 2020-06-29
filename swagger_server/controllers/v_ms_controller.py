@@ -21,17 +21,13 @@ def add_new_configuration(body):  # noqa: E501
         body = Configuration.from_dict(connexion.request.get_json())  # noqa: E501
         mydb = MySQLdb.connect(host="172.17.0.2", user="root", passwd="password", db="openstacksdk")
         mycursor = mydb.cursor()
-        #print("body.time_start="+str(body.time_start)+",type="+str(type(body.time_start)))
-        #print("body.time_end="+str(body.time_end)+",type="+str(type(body.time_end)))
-        #print("body.flavor="+str(body.flavor)+",type="+str(type(body.flavor)))
-        #print("body.image="+str(body.image)+",type="+str(type(body.image)))
-        #print("body.numberOfVMs="+str(body.number_of_v_ms)+",type="+str(type(body.number_of_v_ms)))
         sql = "INSERT INTO configurations(timeStart, timeEnd, flavor, image, numberOfVMs) VALUES (%s, %s, %s, %s, %s);"
         values = (body.time_start, body.time_end, body.flavor, body.image, body.number_of_v_ms)
         mycursor.execute(sql, values)
         mydb.commit()
         mydb.close()
         return "The job is done"
+
     return "Not correct json format", 400
 
 
@@ -50,6 +46,21 @@ def delete_configuration_by_id(configurationID):  # noqa: E501
     sql = "DELETE FROM configurations WHERE id = %s;"
     values = (configurationID, )
     mycursor.execute(sql, values)
+    mydb.commit()
+    mydb.close()
+    return "The job is done"
+
+def delete_configurations(): # noqa: E501
+    """Deletes a configuration via ID
+
+     # noqa: E501
+
+    :rtype: None
+    """
+    mydb = MySQLdb.connect(host="172.17.0.2", user="root", passwd="password", db="openstacksdk")
+    mycursor = mydb.cursor()
+    sql = "DELETE FROM configurations ;"
+    mycursor.execute(sql)
     mydb.commit()
     mydb.close()
     return "The job is done"
@@ -126,6 +137,7 @@ def update_configuration_by_id(configurationID, body):  # noqa: E501
     :rtype: None
     """
     if connexion.request.is_json:
+
         body = Configuration.from_dict(connexion.request.get_json())  # noqa: E501
         mydb = MySQLdb.connect(host="172.17.0.2", user="root", passwd="password", db="openstacksdk")
         mycursor = mydb.cursor()
@@ -135,4 +147,5 @@ def update_configuration_by_id(configurationID, body):  # noqa: E501
         mydb.commit()
         mydb.close()
         return "The job is done"
-    return 'do some magic!'
+
+    return "Not correct json format", 400
