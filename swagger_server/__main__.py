@@ -91,6 +91,7 @@ if __name__ == '__main__':
     activeConfigurations = {} # key: configurationId, value: [server names returned by create_server()]
     debug = True
     while not syncObject.hasEnded():
+        
         currentTime = datetime.datetime.now(datetime.timezone.utc).time() # time in utc format
         print("System Time: " + str(currentTime))
         confs = retrieve_configurations()
@@ -100,7 +101,8 @@ if __name__ == '__main__':
             pprint(str(activeConfigurations))
             print("All Configurations:")
             pprint(confs)
-            
+        
+        # controllare per ogni configurazione se siamo nel periodo schedulato
         for conf in confs:
             idConf = conf['id']
             timeStart = datetime.datetime.strptime(conf['timeStart'], "%H:%M:%S").time() # HH:MM:SS
@@ -109,19 +111,37 @@ if __name__ == '__main__':
             image = conf['image']
             nVMs = int(conf['numberOfVMs'])
 
-            # TODO fixare bug su endTime < startTime
-            # create VMs according to scheduled configurations
-            if currentTime >= timeStart and currentTime <= timeEnd and (not (idConf in activeConfigurations.keys())):
+            '''
+                1) dalle 09:00 alle 17:00 --> currentTime >= timeStart and currentTime <= timeEnd
+                2) dalle 17:00 alle 09:00 --> currentTime >= timeStart or currentTime <= timeEnd
+                
+            '''
+            condition = ((currentTime >= timeStart and currentTime <= timeEnd) 
+                or (timeEnd <= timeStart and (currentTime >= timeStart or currentTime <= timeEnd)))
+            
+            if condition and (not (idConf in activeConfigurations.keys())):
                 activeConfigurations[idConf] = Queue()
                 if nVMs == 1: # we consider comparable overhead in creating a thread than allocating a single VM
                     create_vms(activeConfigurations[idConf], conn, image, flavor, nVMs)
                 else:
                     Thread(target=create_vms, args=(activeConfigurations[idConf], conn, image, flavor, nVMs)).start()
             # destroy VMs according to scheduled configurations
-            elif (currentTime < timeStart or currentTime > timeEnd) and (idConf in activeConfigurations.keys()):
+            elif (not condition) and (idConf in activeConfigurations.keys()):
                 Thread(target=destroy_vms, args=(activeConfigurations[idConf], conn)).start()
                 del activeConfigurations[idConf]
-        
+        # cosa fare quando una configurazione viene rimossa dall'admin, ma era una configurazione attiva?
+        # Rimuovere anche le VMs instanziate
+        # Nota: list forza la copia delle chiavi --> niente RuntimeError sul cambio della dimensione del dizionario
+        for id in list(activeConfigurations):
+            found = False
+            for conf in confs:
+                if id == conf['id']:
+                    found = True
+                    break
+            if not found:
+                print("Trovata configurazione zombie con id " + str(id))
+                Thread(target=destroy_vms, args=(activeConfigurations[id], conn)).start()
+                del activeConfigurations[id]
         # and now we wait some time
         print("Sleeping...")
         time.sleep(20)
