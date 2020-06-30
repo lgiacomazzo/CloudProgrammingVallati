@@ -5,7 +5,10 @@ import re
 
 from swagger_server.models.configuration import Configuration  # noqa: E501
 from swagger_server import util
-from swagger_server.utilities.utilities import control_body, create_configuration_dict, retrieve_all_the_configurations
+from swagger_server.utilities.utilities import control_body
+from swagger_server.utilities.utilities import create_configuration_dict
+from swagger_server.utilities.utilities import retrieve_all_the_configurations
+from swagger_server.utilities.utilities import connect_to_db
 from swagger_server.utilities.dataUtils import db_queries_dict
 from datetime import time
 from flask import jsonify
@@ -27,8 +30,7 @@ def add_new_configuration(body):  # noqa: E501
         if body is None:
             return error_msg, 400
         # everything is as expected
-        mydb = MySQLdb.connect(host="172.17.0.2", user="root", passwd="password", db="openstacksdk")
-        mycursor = mydb.cursor()
+        mydb, mycursor = connect_to_db()
         sql = db_queries_dict['insert']
         values = (body.time_start,
                   body.time_end,
@@ -54,8 +56,7 @@ def delete_configuration_by_id(configurationID):  # noqa: E501
 
     :rtype: None
     """
-    mydb = MySQLdb.connect(host="172.17.0.2", user="root", passwd="password", db="openstacksdk")
-    mycursor = mydb.cursor()
+    mydb, mycursor = connect_to_db()
     sql = db_queries_dict['deleteWithId']
     values = (configurationID, )
     mycursor.execute(sql, values)
@@ -71,8 +72,7 @@ def delete_configurations(): # noqa: E501
 
     :rtype: None
     """
-    mydb = MySQLdb.connect(host="172.17.0.2", user="root", passwd="password", db="openstacksdk")
-    mycursor = mydb.cursor()
+    mydb, mycursor = connect_to_db()
     sql = db_queries_dict['delete']
     mycursor.execute(sql)
     mydb.commit()
@@ -91,18 +91,15 @@ def get_configuration_by_id(configurationID):  # noqa: E501
 
     :rtype: Configuration
     """
-    mydb = MySQLdb.connect(host="172.17.0.2", user="root", passwd="password", db="openstacksdk")
-    mycursor = mydb.cursor()
+    mydb, mycursor = connect_to_db()
     sql = db_queries_dict['selectWithId']
     values = (configurationID, )
     mycursor.execute(sql, values)
     myresult = mycursor.fetchall()
     mydb.close()
-    
     if (len(myresult) == 0):
         return jsonify({})
-    conf = myresult[0]
-    return jsonify(create_configuration_dict(conf))
+    return jsonify(create_configuration_dict(myresult[0]))
 
 
 def get_configurations():  # noqa: E501
@@ -137,8 +134,7 @@ def update_configuration_by_id(configurationID, body):  # noqa: E501
         if body is None:
             return error_msg, 400
         # everything is as expected
-        mydb = MySQLdb.connect(host="172.17.0.2", user="root", passwd="password", db="openstacksdk")
-        mycursor = mydb.cursor()
+        mydb, mycursor = connect_to_db()
         sql = db_queries_dict['update']
         values = (body.time_start,
                   body.time_end,

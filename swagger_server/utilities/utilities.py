@@ -5,17 +5,10 @@ import MySQLdb
 from swagger_server.models.configuration import Configuration
 from swagger_server.utilities.dataUtils import pattern, flavors_list, db_queries_dict
 
-def create_configuration_dict(conf):
-    """Creates a dict from a tuple of the database where configurations are stored
-    """
-    return {
-            'id' : int(conf[0]),
-            'timeStart' : str(conf[1]),
-            'timeEnd' : str(conf[2]), 
-            'flavor' : conf[3], 
-            'image' : conf[4], 
-            'numberOfVMs' : int(conf[5])
-        }
+def connect_to_db():
+    mydb = MySQLdb.connect(host="172.17.0.2", user="root", passwd="password", db="openstacksdk")
+    mycursor = mydb.cursor()
+    return mydb, mycursor
 
 def control_body():
     try:
@@ -28,10 +21,27 @@ def control_body():
 
     return body, None
 
+def create_configuration_dict(conf):
+    """Creates a dict from a tuple of the database where configurations are stored
+    """
+    return {
+            'id' : int(conf[0]),
+            'timeStart' : str(conf[1]),
+            'timeEnd' : str(conf[2]), 
+            'flavor' : conf[3], 
+            'image' : conf[4], 
+            'numberOfVMs' : int(conf[5])
+        }
+
 def generate_flavors(conn):
     for flavor, configuration in flavors_list:
         conn.delete_flavor(name_or_id=flavor)
-        conn.create_flavor(name=flavor, ram=configuration['ram'], vcpus=configuration['vcpu'], disk=configuration['disk'])
+        conn.create_flavor(
+                        name=flavor, 
+                        ram=configuration['ram'], 
+                        vcpus=configuration['vcpu'], 
+                        disk=configuration['disk']
+                    )
 
 def is_valid_configuration(conf):
     try:
@@ -51,8 +61,7 @@ def is_valid_configuration(conf):
     return True, None
 
 def retrieve_all_the_configurations():
-    mydb = MySQLdb.connect(host="172.17.0.2", user="root", passwd="password", db="openstacksdk")
-    mycursor = mydb.cursor()
+    mydb, mycursor = connect_to_db()
     sql = db_queries_dict['select']
     mycursor.execute(sql)
     myresult = mycursor.fetchall()
