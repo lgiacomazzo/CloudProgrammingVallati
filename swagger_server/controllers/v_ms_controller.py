@@ -41,9 +41,9 @@ def add_new_configuration(body):  # noqa: E501
         mydb.commit()
         mydb.close()
 
-        return "The job is done"
+        return "Success"
 
-    return "Not correct json format", 400
+    return "Not correct json format", 406
 
 
 def delete_configuration_by_id(configurationID):  # noqa: E501
@@ -63,10 +63,10 @@ def delete_configuration_by_id(configurationID):  # noqa: E501
     mydb.commit()
     mydb.close()
 
-    return "The job is done"
+    return "Success"
 
 def delete_configurations(): # noqa: E501
-    """Deletes a configuration via ID
+    """Deletes all configurations
 
      # noqa: E501
 
@@ -78,7 +78,7 @@ def delete_configurations(): # noqa: E501
     mydb.commit()
     mydb.close()
 
-    return "The job is done"
+    return "Success"
 
 
 def get_configuration_by_id(configurationID):  # noqa: E501
@@ -98,7 +98,7 @@ def get_configuration_by_id(configurationID):  # noqa: E501
     myresult = mycursor.fetchall()
     mydb.close()
     if (len(myresult) == 0):
-        return jsonify({})
+        return "Configuration not found", 404
     return jsonify(create_configuration_dict(myresult[0]))
 
 
@@ -112,7 +112,7 @@ def get_configurations():  # noqa: E501
     """
     configurations = retrieve_all_the_configurations()
     if (len(configurations) == 0):
-        return jsonify({})
+        return "No configurations available", 404
     return jsonify(configurations)
 
 
@@ -146,6 +146,6 @@ def update_configuration_by_id(configurationID, body):  # noqa: E501
         mydb.commit()
         mydb.close()
 
-        return "The job is done"
+        return "Success", 200
 
-    return "Not correct json format", 400
+    return "Not correct json format", 406

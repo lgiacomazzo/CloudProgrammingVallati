@@ -34,12 +34,12 @@ def create_configuration_dict(conf):
         }
 
 def generate_flavors(conn):
-    for flavor, configuration in flavors_list:
+    for flavor, configuration in flavors_list.items():
         conn.delete_flavor(name_or_id=flavor)
         conn.create_flavor(
                         name=flavor, 
                         ram=configuration['ram'], 
-                        vcpus=configuration['vcpu'], 
+                        vcpus=configuration['vcpus'], 
                         disk=configuration['disk']
                     )
 
