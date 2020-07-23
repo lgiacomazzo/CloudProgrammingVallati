@@ -35,11 +35,11 @@ def destroy_vms(configurations, conn):
         configurations.task_done()
         conn.delete_server(server)
 
-def check_zombie_configurations(activeConfigurations):
-    # list forza la copia delle chiavi --> niente RuntimeError sul cambio della dimensione del dizionario
+def check_zombie_configurations(activeConfigurations, allConfigurations):
+    # list makes a copy of the key, so no RuntimeError on modifying the dictionary
     for id in list(activeConfigurations):
         found = False
-        for conf in confs:
+        for conf in allConfigurations:
             if id == conf['id']:
                 found = True
                 break
@@ -75,9 +75,8 @@ if __name__ == '__main__':
             image = conf['image']
             nVMs = int(conf['numberOfVMs'])
 
-            # 1) dalle 09:00 alle 17:00 --> currentTime >= timeStart and currentTime <= timeEnd
-            # 2) dalle 17:00 alle 09:00 --> currentTime >= timeStart or currentTime <= timeEnd
-
+            # we handle both the case when the scheduled time period is in the same day and 
+            # the case when it is wrapped to the next day (ex: 15:00 to 16:00, 21:00 to 02:00)
             time_condition = ((currentTime >= timeStart and currentTime <= timeEnd) 
                 or (timeEnd <= timeStart and (currentTime >= timeStart or currentTime <= timeEnd)))
             
@@ -96,7 +95,7 @@ if __name__ == '__main__':
                 print(f"Deleted configuration with id '{idConf}'")
 
         # check for active configuration which are not anymore in the db
-        check_zombie_configurations(activeConfigurations)
+        check_zombie_configurations(activeConfigurations, confs)
         # and now we wait some time
         print("Sleeping...")
         time.sleep(20)
